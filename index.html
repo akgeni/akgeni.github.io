@@ -1,85 +1,648 @@
 <!DOCTYPE html>
-<html lang="en-us">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
-    <title>Anshu Kumar</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="shortcut icon" type="image/png" href="https://avatars3.githubusercontent.com/u/6544752?s=460&v=4" />
-    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
-    <link rel="stylesheet" type="text/css" href="font-awesome/css/font-awesome.min.css">
-    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN"
-        crossorigin="anonymous">
-    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
-    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
-    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
-    <script src="javascripts/main.js" type="text/javascript"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anshu Kumar — Applied AI Lead | Agentic Systems & Enterprise Search</title>
+    <meta name="description"
+        content="Anshu Kumar is an Applied AI Lead with 12.5+ years of experience architecting production-grade agentic workflows, enterprise search & retrieval, and Generative Engine Optimization (GEO) systems.">
+    <link rel="shortcut icon" type="image/png"
+        href="https://avatars3.githubusercontent.com/u/6544752?s=460&v=4" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="stylesheets/theme.css">
 </head>
 
 <body>
-    <section class="page-header">
-        <h1 class="project-name">Anshu Kumar</h1>
-        <h2 class="project-tagline">Machine Learning Lead at Chefling</h2>
-        <h4 class="project-tagline">ML Enthusiast|Mentor|Author</h3>
-        <a target="_blank" href="https://github.com/akgeni" class="btn wipe">
-            <i class="fa fa-github" aria-hidden="true"></i> View on GitHub</a>
-        <a target="_blank" href="https://in.linkedin.com/in/anshu19" class="btn wipe">
-            <i class="fa fa-linkedin" aria-hidden="true"></i> View on LinkedIn</a>
-        <a target="_blank" href="https://www.kaggle.com/akgeni" class="btn">
-            <strong>k</strong> View on Kaggle</a>
-        <a target="_blank" href="https://datahack.analyticsvidhya.com/user/profile/akgeni" class="btn">
-            <strong>AV</strong> View on Analytics Vidhya</a>
+    <!-- ===== NAVIGATION ===== -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <a href="#" class="nav-logo">
+                <span class="logo-bracket">&lt;</span>AK<span class="logo-bracket">/&gt;</span>
+            </a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#about" class="nav-link">About</a></li>
+                <li><a href="#articles" class="nav-link">Articles & Findings</a></li>
+                <li><a href="#projects" class="nav-link">Projects</a></li>
+                <li><a href="#skills" class="nav-link">Skills</a></li>
+                <li><a href="#contact" class="nav-link">Contact</a></li>
+            </ul>
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ===== HERO SECTION ===== -->
+    <header class="hero" id="hero">
+        <div class="hero-bg">
+            <img src="images/hero-bg.jpg" alt="" aria-hidden="true">
+            <div class="hero-overlay"></div>
+        </div>
+        <div class="hero-particles" id="particles"></div>
+        <div class="hero-content">
+            <div class="hero-avatar">
+                <img src="data/anshu.jpeg" alt="Anshu Kumar" loading="eager">
+                <div class="avatar-ring"></div>
+            </div>
+            <h1 class="hero-title">
+                <span class="greeting" id="greeting">Hello, I'm</span>
+                <span class="name">Anshu Kumar</span>
+            </h1>
+            <p class="hero-subtitle">
+                <span class="typewriter" id="typewriter"></span>
+                <span class="cursor">|</span>
+            </p>
+            <div class="hero-stats">
+                <div class="stat">
+                    <span class="stat-number" id="yearsExp">12.5+</span>
+                    <span class="stat-label">Years Experience</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat">
+                    <span class="stat-number">Enterprise</span>
+                    <span class="stat-label">Scale (Walmart+)</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat">
+                    <span class="stat-number">E2E</span>
+                    <span class="stat-label">Production Systems</span>
+                </div>
+            </div>
+            <div class="hero-actions">
+                <a href="#articles" class="btn btn-primary">
+                    <i class="fa-solid fa-newspaper"></i> Read Articles
+                </a>
+                <a href="#projects" class="btn btn-outline">
+                    <i class="fa-solid fa-diagram-project"></i> View Projects
+                </a>
+            </div>
+            <div class="hero-socials">
+                <a href="https://github.com/akgeni" target="_blank" rel="noopener" aria-label="GitHub"
+                    class="social-link">
+                    <i class="fa-brands fa-github"></i>
+                </a>
+                <a href="https://in.linkedin.com/in/anshu19" target="_blank" rel="noopener" aria-label="LinkedIn"
+                    class="social-link">
+                    <i class="fa-brands fa-linkedin-in"></i>
+                </a>
+                <a href="https://www.kaggle.com/akgeni" target="_blank" rel="noopener" aria-label="Kaggle"
+                    class="social-link">
+                    <i class="fa-brands fa-kaggle"></i>
+                </a>
+            </div>
+        </div>
+        <a href="#about" class="scroll-indicator" aria-label="Scroll down">
+            <div class="mouse">
+                <div class="wheel"></div>
+            </div>
+        </a>
+    </header>
+
+    <!-- ===== ABOUT SECTION ===== -->
+    <section class="section" id="about">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">Who I Am</span>
+                <h2 class="section-title">About Me</h2>
+                <div class="section-line"></div>
+            </div>
+            <div class="about-grid">
+                <div class="about-text">
+                    <p class="about-lead">
+                        I'm an <strong>Applied AI Lead</strong> with 12.5+ years of experience,
+                        operating as a hands-on technical lead driving architecture, core modeling,
+                        and engineering execution for production AI systems.
+                    </p>
+                    <p>
+                        My current work centers on modernizing <em>Enterprise Search & Retrieval</em>
+                        and architecting <em>Agentic SEO / Generative Engine Optimization (GEO)</em>
+                        systems — building production-grade agentic workflows with strict offline
+                        evaluation pipelines, deterministic grounding, enterprise safety guardrails,
+                        and token-cost optimization.
+                    </p>
+                    <p>
+                        Previously at <strong>Walmart</strong>, I directed initiatives to overhaul
+                        product discovery and semantic search, including fine-tuning Vision-Language
+                        Models (VLMs) and visual representation models to power catalog understanding
+                        and multimodal item retrieval at enterprise scale.
+                    </p>
+                    <div class="about-highlights">
+                        <div class="highlight">
+                            <i class="fa-solid fa-robot"></i>
+                            <span>Agentic AI Systems</span>
+                        </div>
+                        <div class="highlight">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <span>Enterprise Search & Retrieval</span>
+                        </div>
+                        <div class="highlight">
+                            <i class="fa-solid fa-chart-line"></i>
+                            <span>GEO & Algorithmic SEO</span>
+                        </div>
+                        <div class="highlight">
+                            <i class="fa-solid fa-flask-vial"></i>
+                            <span>Evaluation & Experimentation</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="about-image">
+                    <div class="about-card">
+                        <div class="card-header">
+                            <div class="card-dots">
+                                <span></span><span></span><span></span>
+                            </div>
+                            <span class="card-title">anshu_profile.py</span>
+                        </div>
+                        <pre class="card-code"><code><span class="code-keyword">class</span> <span class="code-class">AppliedAILead</span>:
+    <span class="code-keyword">def</span> <span class="code-func">__init__</span>(self):
+        self.name = <span class="code-string">"Anshu Kumar"</span>
+        self.role = <span class="code-string">"Applied AI Lead"</span>
+        self.focus = [
+            <span class="code-string">"Agentic Systems"</span>,
+            <span class="code-string">"Enterprise Search"</span>,
+            <span class="code-string">"GEO / Algorithmic SEO"</span>,
+        ]
+        self.models = [
+            <span class="code-string">"BGE-M3"</span>, <span class="code-string">"Qwen2-VL"</span>,
+            <span class="code-string">"OpenCLIP"</span>, <span class="code-string">"Llama 3"</span>,
+        ]
+
+    <span class="code-keyword">def</span> <span class="code-func">current_focus</span>(self):
+        <span class="code-keyword">return</span> <span class="code-string">"Production agentic</span>
+            <span class="code-string">workflows at scale"</span></code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
     </section>
 
-    <section class="main-content">
+    <!-- ===== ARTICLES & FINDINGS ===== -->
+    <section class="section section-alt" id="articles">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">Research & Insights</span>
+                <h2 class="section-title">Articles & Findings</h2>
+                <div class="section-line"></div>
+                <p class="section-desc">Deep dives into agentic AI, enterprise search, retrieval pipelines, and practical insights
+                    from building production systems at scale.</p>
+            </div>
 
-        <h3>Having  <span id="time_span"></span> years <span id="month_span"></span>
-            months of experience in NLP, DeepLearning, Python. and Leading an AI startup.</h3>
+            <!-- Filter Tabs -->
+            <div class="filter-tabs" id="filterTabs">
+                <button class="filter-tab active" data-filter="all">All</button>
+                <button class="filter-tab" data-filter="agentic">Agentic AI</button>
+                <button class="filter-tab" data-filter="search">Search & Retrieval</button>
+                <button class="filter-tab" data-filter="geo">GEO / SEO</button>
+                <button class="filter-tab" data-filter="findings">Key Findings</button>
+            </div>
 
-        <p class="para_align">Built AI at chefling which lead to a successful parternship with Bosch.</p>
+            <div class="articles-grid" id="articlesGrid">
+                <!-- Article 1 -->
+                <article class="article-card" data-category="agentic" id="article-1">
+                    <div class="article-image">
+                        <img src="images/article-nlp.jpg"
+                            alt="Multi-agent workflow visualization">
+                        <div class="article-badge">Agentic AI</div>
+                        <div class="article-read-time">
+                            <i class="fa-regular fa-clock"></i> 12 min read
+                        </div>
+                    </div>
+                    <div class="article-body">
+                        <div class="article-meta">
+                            <time datetime="2026-09-15">Sep 15, 2026</time>
+                            <span class="article-dot">·</span>
+                            <span>Architecture</span>
+                        </div>
+                        <h3 class="article-title">Architecting Production Multi-Agent Workflows: Balancing Quality, Latency, and Token Economics</h3>
+                        <p class="article-excerpt">
+                            How to design end-to-end agentic systems that balance task-completion quality
+                            with enterprise safety guardrails and unit economics. Covers deterministic
+                            grounding, structured outputs, and cost-per-query optimization strategies.
+                        </p>
+                        <div class="article-tags">
+                            <span class="tag">Multi-Agent</span>
+                            <span class="tag">Guardrails</span>
+                            <span class="tag">Token Optimization</span>
+                        </div>
+                        <a href="#" class="article-link">
+                            Read Article <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </article>
 
-        <p class="para_align">Pantry-Match, NEX-IOT, Recommendations, Recipe-Tags are some of ML application I have 
-            built from scratch.</p>
+                <!-- Article 2 -->
+                <article class="article-card" data-category="search" id="article-2">
+                    <div class="article-image">
+                        <img src="images/article-deeplearning.jpg"
+                            alt="Retrieval pipeline architecture">
+                        <div class="article-badge">Search & Retrieval</div>
+                        <div class="article-read-time">
+                            <i class="fa-regular fa-clock"></i> 15 min read
+                        </div>
+                    </div>
+                    <div class="article-body">
+                        <div class="article-meta">
+                            <time datetime="2026-08-02">Aug 2, 2026</time>
+                            <span class="article-dot">·</span>
+                            <span>Technical Deep Dive</span>
+                        </div>
+                        <h3 class="article-title">Multi-Stage Retrieval Pipelines: From Agentic Query Understanding to LLM-Driven Re-Ranking</h3>
+                        <p class="article-excerpt">
+                            Designing modern e-commerce search with agentic intent decomposition,
+                            multi-channel hybrid search (sparse lexical + dense vectors), and
+                            cross-encoder/LLM-driven re-ranking for enterprise-scale product discovery.
+                        </p>
+                        <div class="article-tags">
+                            <span class="tag">Hybrid Search</span>
+                            <span class="tag">Cross-Encoder</span>
+                            <span class="tag">BGE-M3</span>
+                        </div>
+                        <a href="#" class="article-link">
+                            Read Article <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </article>
 
-        <p class="para_align">Generating new ideas which can help the company to generate more business/value is what I have learnt
-            last year.</p>
+                <!-- Article 3 -->
+                <article class="article-card" data-category="geo" id="article-3">
+                    <div class="article-image">
+                        <div class="article-gradient-bg gradient-1"></div>
+                        <div class="article-badge">GEO / SEO</div>
+                        <div class="article-read-time">
+                            <i class="fa-regular fa-clock"></i> 10 min read
+                        </div>
+                    </div>
+                    <div class="article-body">
+                        <div class="article-meta">
+                            <time datetime="2026-06-18">Jun 18, 2026</time>
+                            <span class="article-dot">·</span>
+                            <span>System Design</span>
+                        </div>
+                        <h3 class="article-title">Generative Engine Optimization: Building Autonomous Agents for AI-Era Search Visibility</h3>
+                        <p class="article-excerpt">
+                            How autonomous agents optimize contextual page relevance and graph-based
+                            internal linking topologies to maximize organic reach across both traditional
+                            search engines and emerging AI answer engines.
+                        </p>
+                        <div class="article-tags">
+                            <span class="tag">GEO</span>
+                            <span class="tag">Graph Linking</span>
+                            <span class="tag">Autonomous Agents</span>
+                        </div>
+                        <a href="#" class="article-link">
+                            Read Article <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </article>
 
-        <p class="para_align">Consistently updating myself with emerging trends in the industry and making my skills sharper on Kaggle and 
-            Analytics Vidhya.
-        </p>
+                <!-- Article 4 -->
+                <article class="article-card" data-category="findings" id="article-4">
+                    <div class="article-image">
+                        <div class="article-gradient-bg gradient-2"></div>
+                        <div class="article-badge badge-accent">Key Finding</div>
+                        <div class="article-read-time">
+                            <i class="fa-regular fa-clock"></i> 7 min read
+                        </div>
+                    </div>
+                    <div class="article-body">
+                        <div class="article-meta">
+                            <time datetime="2026-05-10">May 10, 2026</time>
+                            <span class="article-dot">·</span>
+                            <span>Finding</span>
+                        </div>
+                        <h3 class="article-title">Finding: LLM-as-a-Judge Achieves 92% Agreement with Human Evaluators on RAG Grounding Metrics</h3>
+                        <p class="article-excerpt">
+                            Our evaluation harness comparing LLM-as-a-judge assessments against expert
+                            human annotations showed strong alignment on faithfulness and relevance metrics,
+                            making automated offline evaluation viable for rapid iteration cycles.
+                        </p>
+                        <div class="article-tags">
+                            <span class="tag">LLM-as-Judge</span>
+                            <span class="tag">RAG Evaluation</span>
+                            <span class="tag">Grounding</span>
+                        </div>
+                        <a href="#" class="article-link">
+                            Read Finding <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </article>
 
-        <p class="para_align">When not making a difference in the world, I play Badminton.</p>
+                <!-- Article 5 -->
+                <article class="article-card" data-category="search" id="article-5">
+                    <div class="article-image">
+                        <div class="article-gradient-bg gradient-3"></div>
+                        <div class="article-badge">Search & Retrieval</div>
+                        <div class="article-read-time">
+                            <i class="fa-regular fa-clock"></i> 14 min read
+                        </div>
+                    </div>
+                    <div class="article-body">
+                        <div class="article-meta">
+                            <time datetime="2026-03-22">Mar 22, 2026</time>
+                            <span class="article-dot">·</span>
+                            <span>Case Study</span>
+                        </div>
+                        <h3 class="article-title">Fine-Tuning VLMs for Catalog Understanding: From OpenCLIP to Multimodal Item Retrieval at Walmart Scale</h3>
+                        <p class="article-excerpt">
+                            How we fine-tuned Vision-Language Models (Qwen2-VL-7B) and OpenCLIP for
+                            product attribute extraction, image-text verification, and automated catalog
+                            enrichment powering semantic product discovery.
+                        </p>
+                        <div class="article-tags">
+                            <span class="tag">VLM</span>
+                            <span class="tag">OpenCLIP</span>
+                            <span class="tag">Multimodal</span>
+                        </div>
+                        <a href="#" class="article-link">
+                            Read Article <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </article>
 
-        <p>Peace! <i class="fa fa-hand-peace-o" aria-hidden="true"></i></p>
-
-        <footer class="site-footer">
-            <span class="site-footer-owner">This webpage is maintained by
-                <a target="_blank" href="https://github.com/akgeni/">Anshu</a>.</span>
-
-            <span class="site-footer-credits">This page was generated by
-                <a target="_blank" href="https://pages.github.com">GitHub Pages</a> using the
-                <a target="_blank" href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by
-                <a target="_blank" href="https://twitter.com/jasonlong">Jason Long</a>.</span>
-        </footer>
-
+                <!-- Article 6 -->
+                <article class="article-card" data-category="findings" id="article-6">
+                    <div class="article-image">
+                        <div class="article-gradient-bg gradient-4"></div>
+                        <div class="article-badge badge-accent">Key Finding</div>
+                        <div class="article-read-time">
+                            <i class="fa-regular fa-clock"></i> 6 min read
+                        </div>
+                    </div>
+                    <div class="article-body">
+                        <div class="article-meta">
+                            <time datetime="2026-02-08">Feb 8, 2026</time>
+                            <span class="article-dot">·</span>
+                            <span>Finding</span>
+                        </div>
+                        <h3 class="article-title">Finding: Hybrid Sparse+Dense Retrieval Outperforms Pure Dense by 18% on Long-Tail E-Commerce Queries</h3>
+                        <p class="article-excerpt">
+                            Benchmarking multi-channel hybrid search (BM25 + BGE-M3 dense vectors)
+                            against pure dense retrieval on long-tail product queries showed significant
+                            gains in recall@100, especially for rare and compositional queries.
+                        </p>
+                        <div class="article-tags">
+                            <span class="tag">Hybrid Search</span>
+                            <span class="tag">BM25</span>
+                            <span class="tag">Dense Retrieval</span>
+                        </div>
+                        <a href="#" class="article-link">
+                            Read Finding <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </article>
+            </div>
+        </div>
     </section>
 
-    <script>
-        var doJ = new Date(2014, 8, 1, 0, 0, 0, 0);
-        var currentDate = new Date();
-        var age = currentDate.getFullYear() - doJ.getFullYear();
-        var month = currentDate.getMonth() - doJ.getMonth();
-        var day = currentDate.getDate() - doJ.getDate();
+    <!-- ===== PROJECTS SECTION ===== -->
+    <section class="section" id="projects">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">What I've Built</span>
+                <h2 class="section-title">Projects</h2>
+                <div class="section-line"></div>
+            </div>
+            <div class="projects-grid">
+                <!-- Project 1 -->
+                <div class="project-card" id="project-agentic">
+                    <div class="project-icon">
+                        <i class="fa-solid fa-robot"></i>
+                    </div>
+                    <h3 class="project-title">Agentic Search & Retrieval</h3>
+                    <p class="project-desc">Production multi-agent workflows for enterprise search modernization — agentic query understanding, intent decomposition, hybrid retrieval, and LLM re-ranking with safety guardrails.</p>
+                    <div class="project-tech">
+                        <span>Llama 3</span>
+                        <span>BGE-M3</span>
+                        <span>LangGraph</span>
+                    </div>
+                    <div class="project-metrics">
+                        <div class="metric">
+                            <span class="metric-value">E2E</span>
+                            <span class="metric-label">Production</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-value">40%</span>
+                            <span class="metric-label">↓ Token Cost</span>
+                        </div>
+                    </div>
+                </div>
 
-        if (month < 0 || month === 0) {
-            age--;
-        } else if (month < 0 && day < 0) {
-            month = month + 12;
-        }
+                <!-- Project 2 -->
+                <div class="project-card" id="project-geo">
+                    <div class="project-icon">
+                        <i class="fa-solid fa-chart-line"></i>
+                    </div>
+                    <h3 class="project-title">GEO / Algorithmic SEO</h3>
+                    <p class="project-desc">Autonomous agents that optimize contextual page relevance and graph-based internal linking topologies to maximize organic reach across search engines and AI answer engines.</p>
+                    <div class="project-tech">
+                        <span>GPT-4 / Claude</span>
+                        <span>Graph Algorithms</span>
+                        <span>Structured Output</span>
+                    </div>
+                    <div class="project-metrics">
+                        <div class="metric">
+                            <span class="metric-value">Auto</span>
+                            <span class="metric-label">Autonomous Agents</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-value">↑ Organic</span>
+                            <span class="metric-label">Reach</span>
+                        </div>
+                    </div>
+                </div>
 
-        document.getElementById('time_span').innerHTML = age;
-        document.getElementById('month_span').innerHTML = month + 12;
-    </script>
+                <!-- Project 3 -->
+                <div class="project-card" id="project-vlm">
+                    <div class="project-icon">
+                        <i class="fa-solid fa-eye"></i>
+                    </div>
+                    <h3 class="project-title">Multimodal Catalog AI</h3>
+                    <p class="project-desc">Fine-tuned VLMs (Qwen2-VL-7B) and OpenCLIP for large-scale visual search, product attribute extraction, image-text verification, and automated catalog enrichment at Walmart.</p>
+                    <div class="project-tech">
+                        <span>Qwen2-VL</span>
+                        <span>OpenCLIP</span>
+                        <span>ViT</span>
+                    </div>
+                    <div class="project-metrics">
+                        <div class="metric">
+                            <span class="metric-value">Walmart</span>
+                            <span class="metric-label">Scale</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-value">PEFT</span>
+                            <span class="metric-label">Fine-Tuning</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project 4 -->
+                <div class="project-card" id="project-eval">
+                    <div class="project-icon">
+                        <i class="fa-solid fa-flask-vial"></i>
+                    </div>
+                    <h3 class="project-title">Evaluation & Experimentation</h3>
+                    <p class="project-desc">Robust offline evaluation harnesses (LLM-as-a-judge, trajectory evals, RAG grounding metrics) with end-to-end online A/B testing tied to business KPIs.</p>
+                    <div class="project-tech">
+                        <span>LLM-as-Judge</span>
+                        <span>A/B Testing</span>
+                        <span>RAG Metrics</span>
+                    </div>
+                    <div class="project-metrics">
+                        <div class="metric">
+                            <span class="metric-value">CTR</span>
+                            <span class="metric-label">Conversion KPIs</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-value">92%</span>
+                            <span class="metric-label">Judge Agreement</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== SKILLS SECTION ===== -->
+    <section class="section section-alt" id="skills">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">My Arsenal</span>
+                <h2 class="section-title">Skills & Tech Stack</h2>
+                <div class="section-line"></div>
+            </div>
+            <div class="skills-grid">
+                <div class="skill-category">
+                    <h3 class="skill-cat-title">
+                        <i class="fa-solid fa-robot"></i> Agentic AI & Retrieval
+                    </h3>
+                    <div class="skill-items">
+                        <div class="skill-item">
+                            <span class="skill-name">Multi-Agent Workflows</span>
+                            <div class="skill-bar"><div class="skill-fill" data-level="95"></div></div>
+                        </div>
+                        <div class="skill-item">
+                            <span class="skill-name">Hybrid Search (Sparse + Dense)</span>
+                            <div class="skill-bar"><div class="skill-fill" data-level="94"></div></div>
+                        </div>
+                        <div class="skill-item">
+                            <span class="skill-name">Cross-Encoder / LLM Re-Ranking</span>
+                            <div class="skill-bar"><div class="skill-fill" data-level="92"></div></div>
+                        </div>
+                        <div class="skill-item">
+                            <span class="skill-name">GEO & Algorithmic SEO</span>
+                            <div class="skill-bar"><div class="skill-fill" data-level="90"></div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="skill-category">
+                    <h3 class="skill-cat-title">
+                        <i class="fa-solid fa-brain"></i> Models & Frameworks
+                    </h3>
+                    <div class="skill-items">
+                        <div class="skill-item">
+                            <span class="skill-name">LLMs (Llama 3, Mistral, GPT-4, Claude)</span>
+                            <div class="skill-bar"><div class="skill-fill" data-level="95"></div></div>
+                        </div>
+                        <div class="skill-item">
+                            <span class="skill-name">VLMs (Qwen2-VL, OpenCLIP, ViT)</span>
+                            <div class="skill-bar"><div class="skill-fill" data-level="90"></div></div>
+                        </div>
+                        <div class="skill-item">
+                            <span class="skill-name">Bi-Encoders / Cross-Encoders (BGE-M3)</span>
+                            <div class="skill-bar"><div class="skill-fill" data-level="93"></div></div>
+                        </div>
+                        <div class="skill-item">
+                            <span class="skill-name">Python / PyTorch / HuggingFace</span>
+                            <div class="skill-bar"><div class="skill-fill" data-level="97"></div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="skill-category">
+                    <h3 class="skill-cat-title">
+                        <i class="fa-solid fa-flask-vial"></i> Evaluation & Infra
+                    </h3>
+                    <div class="skill-items">
+                        <div class="skill-item">
+                            <span class="skill-name">LLM-as-a-Judge / Trajectory Evals</span>
+                            <div class="skill-bar"><div class="skill-fill" data-level="92"></div></div>
+                        </div>
+                        <div class="skill-item">
+                            <span class="skill-name">RAG Grounding & Faithfulness Metrics</span>
+                            <div class="skill-bar"><div class="skill-fill" data-level="90"></div></div>
+                        </div>
+                        <div class="skill-item">
+                            <span class="skill-name">A/B Testing (CTR, Conversion, Engagement)</span>
+                            <div class="skill-bar"><div class="skill-fill" data-level="88"></div></div>
+                        </div>
+                        <div class="skill-item">
+                            <span class="skill-name">Prompt Optimization & Structured Outputs</span>
+                            <div class="skill-bar"><div class="skill-fill" data-level="93"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== CONTACT / FOOTER ===== -->
+    <footer class="footer" id="contact">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <a href="#" class="nav-logo footer-logo">
+                        <span class="logo-bracket">&lt;</span>AK<span class="logo-bracket">/&gt;</span>
+                    </a>
+                    <p class="footer-tagline">Applied AI Lead · Agentic Systems · Enterprise Search · GEO</p>
+                </div>
+                <div class="footer-links-group">
+                    <h4>Navigation</h4>
+                    <ul>
+                        <li><a href="#about">About</a></li>
+                        <li><a href="#articles">Articles</a></li>
+                        <li><a href="#projects">Projects</a></li>
+                        <li><a href="#skills">Skills</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links-group">
+                    <h4>Connect</h4>
+                    <ul>
+                        <li><a href="https://github.com/akgeni" target="_blank" rel="noopener">GitHub</a></li>
+                        <li><a href="https://in.linkedin.com/in/anshu19" target="_blank" rel="noopener">LinkedIn</a>
+                        </li>
+                        <li><a href="https://www.kaggle.com/akgeni" target="_blank" rel="noopener">Kaggle</a></li>
+                        <li><a href="https://datahack.analyticsvidhya.com/user/profile/akgeni" target="_blank"
+                                rel="noopener">Analytics Vidhya</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; <span id="currentYear"></span> Anshu Kumar. Crafted with
+                    <i class="fa-solid fa-heart" style="color: #ef4444;"></i> and Python.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Back to Top -->
+    <button class="back-to-top" id="backToTop" aria-label="Back to top">
+        <i class="fa-solid fa-chevron-up"></i>
+    </button>
+
+    <script src="javascripts/main.js"></script>
 </body>
 
 </html>
