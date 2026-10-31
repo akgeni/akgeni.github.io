@@ -211,3 +211,4 @@ Notice how differently the two search modes consume the index:
 - **Map-Reduce Achieves $1,000\times$ Token Compression:** Pre-aggregated community reports compress millions of corpus tokens into a concise set of structured findings that fit comfortably into standard LLM prompts.
 - **Severity Scores Enable Algorithmic Pruning:** Pre-computed numeric ratings allow the Map-Reduce pipeline to sort, filter, and prioritize critical findings deterministically before final generation.
 - **Dual-Engine Synergy:** Local Search handles precision entity queries (*"Does Battery A work with Phone B?"*), while Global Search handles corpus-wide sensemaking (*"What are the top failure modes across all electronics?"*). A robust enterprise architecture requires both.
+
