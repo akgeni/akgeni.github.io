@@ -262,3 +262,4 @@ Deploying GraphRAG Local Search in enterprise production introduces meaningful a
 3. **Covariates/Claims Bridge the Qualitative-Quantitative Divide**: Structured claims transform subjective prose into quantifiable assertions with explicit status, severity, and provenance.
 4. **Local Search Complements, Rather Than Replaces, Global Search**: Use Global Search for high-level thematic queries (*"What are the major pain points across all 2026 products?"*) and Local Search for precision entity queries (*"Does Accessory X fit Product Y?"*).
 5. **Storage Decoupling Matters**: Storing vector indexes in LanceDB and relational graph tables in columnar Parquet provides optimal performance, low cloud storage cost, and seamless integration with analytical engines.
+
