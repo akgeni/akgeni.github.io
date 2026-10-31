@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GraphRAG Indexing for Global Search: Architecture, Leiden Communities, and Map-Reduce Synthesis — Anshu Kumar</title>
+    <meta name="description"
+        content="A deep dive into how GraphRAG powers corpus-wide, thematic synthesis questions using hierarchical Leiden community detection, pre-computed community reports, and Map-Reduce execution — with architectural tradeoffs and key engineering takeaways.">
+    <link rel="shortcut icon" type="image/png" href="https://avatars3.githubusercontent.com/u/6544752?s=460&v=4" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="../stylesheets/theme.css">
+
+    <!-- Mermaid.js for architecture diagram -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            mermaid.initialize({
+                startOnLoad: true,
+                theme: 'dark',
+                flowchart: { curve: 'basis', nodeSpacing: 30, rankSpacing: 40 },
+                themeVariables: {
+                    darkMode: true,
+                    background: '#161d33',
+                    primaryColor: '#6366f1',
+                    primaryTextColor: '#e8ecf4',
+                    primaryBorderColor: 'rgba(99, 102, 241, 0.4)',
+                    lineColor: '#06b6d4',
+                    secondaryColor: '#1e2745',
+                    tertiaryColor: '#0f1424'
+                }
+            });
+        });
+    </script>
+</head>
+
+<body>
+    <!-- ===== NAVIGATION ===== -->
+    <nav class="navbar scrolled" id="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="nav-logo">
+                <span class="logo-bracket">&lt;</span>AK<span class="logo-bracket">/&gt;</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="../index.html#about" class="nav-link">About</a></li>
+                <li><a href="../index.html#articles" class="nav-link active">Articles &amp; Findings</a></li>
+                <li><a href="../index.html#projects" class="nav-link">Projects</a></li>
+                <li><a href="../index.html#skills" class="nav-link">Skills</a></li>
+                <li><a href="../index.html#contact" class="nav-link">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- ===== ARTICLE HEADER ===== -->
+    <header class="article-header-section">
+        <div class="article-header-container">
+            <a href="../index.html#articles" class="back-to-home">
+                <i class="fa-solid fa-arrow-left"></i> Back to Articles &amp; Findings
+            </a>
+            <div class="article-tags-row">
+                <span class="tag tag-graphrag">GraphRAG</span>
+                <span class="tag tag-search">Search &amp; Retrieval</span>
+                <span class="tag tag-kg">Global Search</span>
+                <span class="tag tag-kg">Knowledge Graphs</span>
+            </div>
+            <h1 class="article-main-title">GraphRAG Indexing for Global Search: Architecture, Leiden Communities, and Map-Reduce Synthesis</h1>
+            <p class="article-lead">
+                How GraphRAG solves corpus-wide thematic queries that break standard vector search — through hierarchical Leiden community clustering, pre-computed summary reports, and Map-Reduce execution.
+            </p>
+
+            <div class="article-author-meta">
+                <div class="author-icon-avatar">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+                <div class="author-info">
+                    <h4>Anshu Kumar</h4>
+                    <p>Applied AI Lead · Search &amp; Agentic Systems</p>
+                </div>
+                <div class="article-details">
+                    <span><i class="fa-regular fa-calendar"></i> October 31, 2026</span>
+                    <span><i class="fa-regular fa-clock"></i> 14 min read</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ===== ARTICLE BODY ===== -->
+    <main class="article-body-container">
+        <article class="article-prose">
+
+            <div class="callout-box">
+                <div class="callout-title">
+                    <i class="fa-solid fa-lightbulb"></i> Executive Summary
+                </div>
+                <div class="callout-content">
+                    <p>
+                        <strong>Global Search</strong> is engineered for dataset-wide, thematic, and corpus-level synthesis questions (e.g., <em>"What are the top 5 product quality issues across our entire catalog?"</em> or <em>"What overarching trends emerge from 100,000 customer return tickets?"</em>). While Local Search traverses fine-grained subgraphs around specific seed entities, Global Search never scans raw text chunks at query time. Instead, an offline indexing pipeline organizes the knowledge graph into hierarchical communities using the <strong>Leiden algorithm</strong>, pre-computes structured <strong>Community Reports</strong>, and executes a distributed <strong>Map-Reduce</strong> workflow at query time.
+                    </p>
+                </div>
+            </div>
+
+            <!-- ===== SECTION 1: THE PROBLEM ===== -->
+            <h2><i class="fa-solid fa-triangle-exclamation section-icon icon-amber"></i> 1. The "Why": Why Traditional Vector RAG Fails on Global Questions</h2>
+            <p>
+                Standard vector retrieval architectures split documents into fixed chunks, generate dense vector embeddings, and retrieve the top-$k$ most similar passages via cosine similarity. While effective for narrow fact retrieval, this approach fundamentally breaks down when faced with broad, corpus-wide synthesis queries.
+            </p>
+
+            <div class="table-wrapper">
+                <table class="article-table">
+                    <thead>
+                        <tr>
+                            <th>Vector RAG Limitation</th>
+                            <th>What Happens on Global Queries</th>
+                            <th>Enterprise / E-Commerce Consequence</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>1. Query-Vector Mismatch</strong></td>
+                            <td>Vector search relies on cosine similarity between the query and chunk embeddings. A broad query like <em>"What are common quality defects?"</em> has no single semantic vector matching every defect.</td>
+                            <td>Retrieves only chunks containing the literal phrase <em>"quality defects"</em>, missing 99% of actual complaints about soles peeling, batteries draining, or blender motors smoking.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>2. Context Window Collapse</strong></td>
+                            <td>A catalog with 50,000 reviews spans ~15,000,000 tokens. Passing all chunks directly into an LLM context window is mathematically and economically infeasible.</td>
+                            <td>Top-$k$ vector retrieval arbitrarily samples 20–50 chunks. An issue affecting 40% of returns might be completely omitted simply because it wasn't in the top-20 nearest vectors.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>3. Information Fragmentation</strong></td>
+                            <td>Unstructured text chunks are completely isolated. Vector search cannot synthesize patterns that connect across documents.</td>
+                            <td>400 reviews complaining about <em>"sole coming off"</em> and 200 reviews noting <em>"heel stitching snapped in rain"</em> remain separate data points rather than a cohesive <em>"Footwear Moisture &amp; Adhesive Durability"</em> theme.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- ===== SECTION 2: THE PYRAMID ===== -->
+            <h2><i class="fa-solid fa-layer-group section-icon icon-cyan"></i> 2. The Solution: The Hierarchical Summary Pyramid</h2>
+            <p>
+                Rather than searching over raw chunks at query time, GraphRAG uses offline indexing to turn unstructured text into an interconnected <strong>Knowledge Graph</strong>, partitions that graph into <strong>modular communities</strong> using the Leiden algorithm, and pre-computes <strong>Community Reports</strong> at multiple levels of abstraction.
+            </p>
+
+            <pre><code>       ▲                Level 0: Corpus Executive Summary (1–3 reports)
+      / \               "Overall catalog quality: Footwear adhesives &amp; Electronics thermals"
+     /   \              
+    /     \             Level 1: Category / Department Reports (10–20 reports)
+   /       \            "Footwear Durability", "Mobile Device Power", "Small Appliances"
+  /         \           
+ /           \          Level 2: Component &amp; Sub-Topic Reports (50–200 reports)
+/_____________\         "Sneaker Outsole Glues", "USB-C Fast Charging Heat", "Blender Motors"
+ [ Raw Data ]           50,000+ Raw Reviews / Text Units (Never directly scanned at query time!)</code></pre>
+
+            <p>
+                At search time, Global Search executes <strong>Map-Reduce over these pre-computed reports</strong>. This enables an LLM to answer corpus-wide questions with full dataset coverage in seconds for a fraction of the token cost.
+            </p>
+
+            <!-- ===== SECTION 3: ARCHITECTURE ===== -->
+            <h2><i class="fa-solid fa-sitemap section-icon icon-indigo"></i> 3. End-to-End Indexing Architecture for Global Search</h2>
+            <p>
+                The offline pipeline transforms raw unstructured documents into structured, multi-level analytical reports ready for Map-Reduce query execution.
+            </p>
+
+            <div class="mermaid-container">
+                <pre class="mermaid">
+flowchart TD
+    subgraph S1["① Ingestion & Extraction"]
+        RAW["📦 50,000+ Raw Reviews & Tickets"]
+        CHUNKS["✂️ Text Units (1,200 tokens)"]
+        EXTRACT["🔍 Entity & Relation Extraction"]
+        RAW --> CHUNKS --> EXTRACT
+    end
+
+    subgraph S2["② Graph & Community Detection"]
+        GRAPH["🕸️ Consolidated Knowledge Graph"]
+        LEIDEN["👥 Hierarchical Leiden Clustering"]
+        EXTRACT --> GRAPH --> LEIDEN
+    end
+
+    subgraph S3["③ Pre-Computed Index"]
+        REPORTS["📑 Multi-Level Community Reports\n(L0 Corpus · L1 Categories · L2 Topics)"]
+        PARQUET["💾 Columnar Storage (Parquet)"]
+        LEIDEN --> REPORTS --> PARQUET
+    end
+
+    subgraph S4["④ Query-Time Map-Reduce"]
+        Q["❓ Broad Corpus Query"]
+        MAP["🗺️ Parallel MAP Phase (Batches)"]
+        REDUCE["⚡ Consolidated REDUCE Phase"]
+        ANS["✅ Executive Briefing with Citations"]
+        Q --> MAP --> REDUCE --> ANS
+    end
+
+    PARQUET -.->|"Supplies pre-computed\nsummaries (0 raw chunks)"| MAP
+                </pre>
+            </div>
+
+            <!-- ===== SECTION 4: STEP-BY-STEP ===== -->
+            <h2><i class="fa-solid fa-gears section-icon icon-emerald"></i> 4. Step-by-Step Breakdown of Global Search Indexing</h2>
+
+            <div class="stage-card">
+                <div class="stage-card-header">
+                    <span class="stage-card-title"><i class="fa-solid fa-scissors"></i> Step 1: Document Chunking</span>
+                    <span class="stage-tag">text_units.parquet</span>
+                </div>
+                <p>
+                    The document ingestion pipeline processes thousands of unstructured customer reviews, return logs, and support tickets, slicing them into standardized <code>TextUnits</code> (typically 1,200 tokens with a 100-token sliding window overlap).
+                </p>
+                <pre><code>TextUnit #TU_0142:
+"Customer Return #9821: Returned AirFlex Marathon Runner. Sole began peeling away
+from the toe box after 14 days of wet-weather running. Customer states adhesive
+melted or detached under rain. Refund requested."</code></pre>
+            </div>
+
+            <div class="stage-card">
+                <div class="stage-card-header">
+                    <span class="stage-card-title"><i class="fa-solid fa-project-diagram"></i> Step 2: Entity &amp; Relationship Extraction</span>
+                    <span class="stage-tag">LLM Extraction</span>
+                </div>
+                <p>
+                    An LLM scans each text chunk with structured prompts to extract domain entities (products, components, defect types, materials) and directed relationships. This converts unstructured prose into discrete nodes and links, turning disconnected reviews into a unified semantic graph.
+                </p>
+                <pre><code>• (AirFlex Sneaker) ──[HAS_DEFECT]──> (Sole Delamination)
+• (Sole Delamination) ──[CAUSED_BY]──> (Adhesive Breakdown in Moisture)
+• (iPhone 15 Pro) ──[HAS_DEFECT]──> (Battery Thermal Throttling)
+• (ChefPro Blender) ──[HAS_DEFECT]──> (Motor Overheating)</code></pre>
+            </div>
+
+            <div class="stage-card">
+                <div class="stage-card-header">
+                    <span class="stage-card-title"><i class="fa-solid fa-compress"></i> Step 3: Graph Consolidation &amp; Centrality</span>
+                    <span class="stage-tag">relationships.parquet</span>
+                </div>
+                <p>
+                    The pipeline resolves entity duplicates across the entire corpus (e.g., merging <code>"iPhone 15 Pro"</code>, <code>"iPhone 15Pro"</code>, and <code>"15 Pro"</code> into a single canonical entity) and computes co-occurrence weights. Edge weights reflect how frequently two concepts co-occur across thousands of customer experiences.
+                </p>
+            </div>
+
+            <div class="stage-card">
+                <div class="stage-card-header">
+                    <span class="stage-card-title"><i class="fa-solid fa-network-wired"></i> Step 4: Hierarchical Leiden Community Detection</span>
+                    <span class="stage-tag">communities.parquet</span>
+                </div>
+                <p>
+                    This is the <strong>mathematical core of the Global Search index</strong>. The Leiden algorithm partitions the graph into recursive modular clusters:
+                </p>
+                <ul>
+                    <li><strong>Unsupervised Discovery:</strong> Unlike K-Means, you do not need to specify cluster counts in advance. Leiden maximizes graph modularity, uncovering natural topic boundaries.</li>
+                    <li><strong>Guaranteed Well-Connected Clusters:</strong> Overcomes limitations of older community detection algorithms (like Louvain) by preventing disconnected sub-clusters.</li>
+                    <li><strong>Recursive Multi-Resolution Hierarchy:</strong>
+                        <ul>
+                            <li><strong>Level 0 (Broadest):</strong> 2–4 macro super-communities (e.g., Apparel, Consumer Electronics, Small Appliances).</li>
+                            <li><strong>Level 1 (Intermediate):</strong> 10–25 category communities (e.g., Footwear Durability, Mobile Power, Kitchen Appliances).</li>
+                            <li><strong>Level 2 (Granular):</strong> 50–200 component-level topics (e.g., Sneaker Outsole Glues, Fast Charging Heat, Motor Fuses).</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="stage-card">
+                <div class="stage-card-header">
+                    <span class="stage-card-title"><i class="fa-solid fa-file-shield"></i> Step 5: Generating Community Reports</span>
+                    <span class="stage-tag">community_reports.parquet</span>
+                </div>
+                <p>
+                    For every detected community at every hierarchy level, an offline LLM acts as a domain analyst, synthesizing connected claims, member entities, and source text into a structured <strong>Community Report</strong> with pre-computed importance and severity ratings.
+                </p>
+                <pre><code>{
+  "community_id": 42,
+  "level": 1,
+  "title": "Footwear Outsole Delamination &amp; Moisture Degradation",
+  "summary": "This community encompasses 1,420 customer reviews concerning premature adhesive failure in athletic footwear under wet conditions.",
+  "rating": 9.2,
+  "findings": [
+    {
+      "explanation": "Outsoles detached from the toe box within 14–30 days of purchase due to water-soluble polyurethane adhesive failure.",
+      "severity": 9.5,
+      "impact": "Responsible for 38% of all footwear return requests in Q3."
+    },
+    {
+      "explanation": "Heel counter stitching unravels following exposure to rain.",
+      "severity": 7.0,
+      "impact": "Affects 12% of high-mileage trail runners."
+    }
+  ]
+}</code></pre>
+                <p>
+                    <strong>Why Community Reports are the Secret Sauce:</strong> At query time, Global Search <strong>never reads the 50,000 raw reviews</strong>. Reading 20 Level-1 reports takes ~15,000 tokens versus ~15,000,000 tokens for raw reviews — a $1,000\times$ token compression and execution speedup.
+                </p>
+            </div>
+
+            <!-- ===== SECTION 5: COMPARISON ===== -->
+            <h2><i class="fa-solid fa-table-list section-icon icon-violet"></i> 5. Local Search Indexing vs. Global Search Indexing</h2>
+            <p>
+                Notice how differently the two search paradigms utilize the artifacts generated by the indexing pipeline:
+            </p>
+
+            <div class="table-wrapper">
+                <table class="article-table">
+                    <thead>
+                        <tr>
+                            <th>Index Component</th>
+                            <th>Needed for Local Search?</th>
+                            <th>Needed for Global Search?</th>
+                            <th>Reason for Difference</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Text Units (<code>text_units.parquet</code>)</strong></td>
+                            <td><span class="stage-tag tag-yes-green">Yes (50% context)</span></td>
+                            <td>❌ No</td>
+                            <td>Local Search quotes exact customer sentences; Global Search requires pre-aggregated summaries.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Entity Embeddings (LanceDB)</strong></td>
+                            <td><span class="stage-tag tag-yes-amber">Yes (Seed matching)</span></td>
+                            <td>❌ No</td>
+                            <td>Global Search has no single entity to search for; it queries across categories.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Graph Triples (<code>relationships.parquet</code>)</strong></td>
+                            <td><span class="stage-tag">Yes (1–2 hops)</span></td>
+                            <td>❌ No</td>
+                            <td>Local Search walks specific graph paths; Global Search uses the graph strictly during indexing for community clustering.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Covariates / Claims (<code>covariates.parquet</code>)</strong></td>
+                            <td><span class="stage-tag">Yes (Fine-grained facts)</span></td>
+                            <td>❌ No</td>
+                            <td>Claims provide granular proof for local queries.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Community Reports (<code>community_reports.parquet</code>)</strong></td>
+                            <td><span class="stage-tag tag-yes-cyan">Partial (25% context)</span></td>
+                            <td><span class="stage-tag tag-yes-green">Yes (100% of search)</span></td>
+                            <td><strong>The entire Global Search Map-Reduce engine runs exclusively on community reports.</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- ===== SECTION 6: QUERY-TIME WALKTHROUGH ===== -->
+            <h2><i class="fa-solid fa-play section-icon icon-cyan"></i> 6. Query-Time Execution: From Index to Answer</h2>
+            <p>
+                When a user asks a high-level question across an enterprise catalog, the engine executes a distributed Map-Reduce workflow over pre-computed reports:
+            </p>
+
+            <div class="query-example-box">
+                <p class="query-label">
+                    <i class="fa-solid fa-terminal"></i> Broad Thematic Query
+                </p>
+                <p class="query-text">
+                    "What are the top 3 product defect themes across our entire catalog, and what financial impact do they have?"
+                </p>
+                <ol class="query-steps">
+                    <li><strong>Level Selection:</strong> The engine selects <strong>Level 1</strong> category reports (~18 reports spanning Footwear, Mobile, Appliances, Apparel, Home).</li>
+                    <li><strong>Parallel MAP Phase:</strong> The 18 reports are split into 3 parallel batches (~6 reports per batch). Parallel LLM "Analyst" workers extract candidate findings scored $0\text{--}100$:
+                        <ul>
+                            <li><em>Batch 1:</em> Footwear Outsole Delamination (Score: 95, 38% returns)</li>
+                            <li><em>Batch 2:</em> Smartphone Battery Thermal Shutdown (Score: 91, 22% returns)</li>
+                            <li><em>Batch 3:</em> Blender Motor Overheat under load (Score: 84, 15% returns)</li>
+                        </ul>
+                    </li>
+                    <li><strong>Rank &amp; Filter:</strong> Candidate points are sorted by severity score descending, filtering out low-confidence noise.</li>
+                    <li><strong>REDUCE Phase:</strong> A final synthesis LLM consolidates top-ranked points into an executive briefing citing specific community reports:
+                        <pre><code>"Across our catalog of 50,000 products and reviews, the top 3 defect themes are:
+1. Footwear Outsole Delamination: Adhesive failure in moisture drives 38% of shoe returns ($420k refund impact).
+2. Mobile Battery Thermal Throttling: Rapid 5G discharge and heat causes 22% of electronics exchanges.
+3. Small Appliance Motor Burnout: Inadequate thermal fuses in blenders lead to 15% warranty claims.
+[Sources: Community Reports #12, #34, #58]"</code></pre>
+                    </li>
+                </ol>
+            </div>
+
+            <!-- ===== SECTION 7: TRADE-OFFS ===== -->
+            <h2><i class="fa-solid fa-scale-balanced section-icon icon-red"></i> 7. Architectural &amp; Engineering Trade-Offs</h2>
+            <p>
+                Deploying GraphRAG Global Search in enterprise production introduces key engineering trade-offs:
+            </p>
+
+            <div class="tradeoffs-grid">
+                <div class="tradeoff-card">
+                    <div class="tradeoff-header">
+                        <i class="fa-solid fa-coins tradeoff-icon icon-amber"></i>
+                        <h3 class="tradeoff-title">1. Heavy Offline Precomputation vs. Instant Query Execution</h3>
+                    </div>
+                    <p class="tradeoff-body">
+                        <strong>Trade-off:</strong> Generating community reports across multiple hierarchical levels incurs significant upfront LLM token cost during indexing. However, this shifts computation from query time (where Map-Reduce over raw chunks would timeout or cost hundreds of dollars per query) to offline ingestion, enabling sub-minute executive synthesis.
+                    </p>
+                </div>
+
+                <div class="tradeoff-card">
+                    <div class="tradeoff-header">
+                        <i class="fa-solid fa-sliders tradeoff-icon icon-cyan"></i>
+                        <h3 class="tradeoff-title">2. Hierarchy Level Selection vs. Information Resolution</h3>
+                    </div>
+                    <p class="tradeoff-body">
+                        <strong>Trade-off:</strong> Querying Level 0 provides broad bird's-eye summaries but glosses over subtle product defects. Querying Level 2 catches granular part numbers but increases the number of parallel MAP calls and token consumption. Setting dynamic level selection based on query breadth is essential in production.
+                    </p>
+                </div>
+
+                <div class="tradeoff-card">
+                    <div class="tradeoff-header">
+                        <i class="fa-solid fa-rotate tradeoff-icon icon-pink"></i>
+                        <h3 class="tradeoff-title">3. Incremental Ingestion vs. Community Partition Drift</h3>
+                    </div>
+                    <p class="tradeoff-body">
+                        <strong>Trade-off:</strong> When thousands of new reviews arrive daily, re-running Leiden clustering across the entire corpus is computationally wasteful. Modern production pipelines employ micro-batch community assignment (assigning new nodes to existing clusters) with scheduled full-graph Leiden re-partitioning periodically.
+                    </p>
+                </div>
+
+                <div class="tradeoff-card">
+                    <div class="tradeoff-header">
+                        <i class="fa-solid fa-shield-halved tradeoff-icon icon-emerald"></i>
+                        <h3 class="tradeoff-title">4. Summarization Bias vs. Grounded Representation</h3>
+                    </div>
+                    <p class="tradeoff-body">
+                        <strong>Trade-off:</strong> Relying on intermediate community summaries risks propagating subtle LLM hallucinations into downstream search results. Mitigate this by enforcing deterministic JSON schema validation, numeric constraint checks, and strict source chunk attribution within each community report.
+                    </p>
+                </div>
+            </div>
+
+            <!-- ===== SECTION 8: TAKEAWAYS ===== -->
+            <div class="takeaways-container">
+                <div class="takeaway-header">
+                    <i class="fa-solid fa-circle-check icon-emerald takeaway-heading-icon"></i>
+                    <h3>Key Engineering Takeaways</h3>
+                </div>
+                <ul class="takeaway-list">
+                    <li class="takeaway-item">
+                        <i class="fa-solid fa-check takeaway-icon"></i>
+                        <span><strong>Community Reports Are the First-Class Index Asset:</strong> Unlike traditional RAG where embeddings of raw text chunks rule, Global Search operates 100% on pre-computed hierarchical community summaries.</span>
+                    </li>
+                    <li class="takeaway-item">
+                        <i class="fa-solid fa-check takeaway-icon"></i>
+                        <span><strong>The Leiden Algorithm Solves the "Unknown Unknowns" Problem:</strong> Unsupervised modularity clustering automatically groups correlated issues without requiring predefined taxonomy or manual ontology maintenance.</span>
+                    </li>
+                    <li class="takeaway-item">
+                        <i class="fa-solid fa-check takeaway-icon"></i>
+                        <span><strong>Map-Reduce Achieves $1,000\times$ Token Compression:</strong> Pre-aggregated community reports compress millions of corpus tokens into a concise set of structured findings that fit comfortably into standard LLM prompts.</span>
+                    </li>
+                    <li class="takeaway-item">
+                        <i class="fa-solid fa-check takeaway-icon"></i>
+                        <span><strong>Severity Scores Enable Algorithmic Pruning:</strong> Pre-computed numeric ratings allow the Map-Reduce pipeline to sort, filter, and prioritize critical findings deterministically before final generation.</span>
+                    </li>
+                    <li class="takeaway-item">
+                        <i class="fa-solid fa-check takeaway-icon"></i>
+                        <span><strong>Dual-Engine Synergy:</strong> Local Search handles precision entity queries (<em>"Does Battery A work with Phone B?"</em>), while Global Search handles corpus-wide sensemaking (<em>"What are the top failure modes across all electronics?"</em>). A robust enterprise architecture requires both.</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="callout-box">
+                <div class="callout-title">
+                    <i class="fa-solid fa-arrows-split-up-and-left"></i> Companion Deep Dive
+                </div>
+                <div class="callout-content">
+                    <p>
+                        Need entity-centric, needle-in-a-haystack search with grounded verbatim citations? Explore part one of our series: <a href="graphrag-local-search-indexing.html" class="article-link">GraphRAG Indexing for Local Search: Architecture, Mechanics, and Engineering Trade-Offs <i class="fa-solid fa-arrow-right"></i></a>.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Author Footer (no profile image) -->
+            <div class="article-author-card">
+                <div class="author-icon-avatar author-icon-avatar-lg">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+                <div class="author-bio-content">
+                    <h3>Anshu Kumar</h3>
+                    <p class="author-role-tag">Applied AI Lead · Search &amp; Agentic Systems</p>
+                    <p class="author-bio-text">
+                        12+ years building production ML systems, Agentic AI, Search &amp; Retrieval, and LLM-powered applications. Passionate about bridging theoretical AI research with high-performance enterprise execution.
+                    </p>
+                    <div class="author-social-links">
+                        <a href="https://github.com/akgeni" target="_blank" rel="noopener" class="author-social-btn">
+                            <i class="fa-brands fa-github"></i> GitHub
+                        </a>
+                        <a href="https://in.linkedin.com/in/anshu19" target="_blank" rel="noopener" class="author-social-btn">
+                            <i class="fa-brands fa-linkedin-in"></i> LinkedIn
+                        </a>
+                        <a href="https://www.kaggle.com/akgeni" target="_blank" rel="noopener" class="author-social-btn">
+                            <i class="fa-brands fa-kaggle"></i> Kaggle
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </article>
+    </main>
+
+    <!-- ===== FOOTER ===== -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom footer-bottom-centered">
+                <p>&copy; 2026 Anshu Kumar. Built with precision and curiosity.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+
+</html>
