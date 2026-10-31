@@ -176,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /* ---------- Scroll Reveal Animations ---------- */
     const animateElements = document.querySelectorAll(
-        '.article-card, .project-card, .skill-category, .about-card, .highlight'
+        '.article-card, .project-card, .skill-category, .about-card, .highlight, .articles-placeholder'
     );
 
     const observerOptions = {

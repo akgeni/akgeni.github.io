@@ -908,6 +908,73 @@ img {
     transform: translateX(4px);
 }
 
+/* ---------- ARTICLES PLACEHOLDER ---------- */
+.articles-placeholder {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 3.5rem 2.5rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--border-radius-lg);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    transition: all var(--transition-smooth);
+}
+
+.articles-placeholder::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--accent-gradient);
+}
+
+.articles-placeholder:hover {
+    transform: translateY(-4px);
+    border-color: var(--border-accent);
+    box-shadow: var(--shadow-lg), var(--shadow-glow);
+}
+
+.placeholder-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 1.5rem;
+    border-radius: 50%;
+    background: var(--accent-glow);
+    border: 1px solid var(--border-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent-primary);
+    font-size: 1.5rem;
+}
+
+.placeholder-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text-bright);
+    margin-bottom: 0.75rem;
+}
+
+.placeholder-desc {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+    max-width: 520px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.placeholder-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
 /* ---------- PROJECTS ---------- */
 .projects-grid {
     display: grid;
@@ -1323,5 +1390,13 @@ img {
 
     .stat-divider {
         height: 30px;
+    }
+
+    .articles-placeholder {
+        padding: 2.5rem 1.25rem;
+    }
+
+    .placeholder-title {
+        font-size: 1.2rem;
     }
 }
