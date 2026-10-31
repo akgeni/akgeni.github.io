@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GraphRAG Indexing for Local Search: Architecture, Mechanics, and Trade-Offs — Anshu Kumar</title>
+    <meta name="description"
+        content="A deep dive into how GraphRAG powers entity-centric local search by synthesizing multi-layer knowledge graphs, LanceDB vector indexes, raw text units, and community reports — with architectural tradeoffs and key engineering takeaways.">
+    <link rel="shortcut icon" type="image/png" href="https://avatars3.githubusercontent.com/u/6544752?s=460&v=4" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="../stylesheets/theme.css">
+
+    <!-- Mermaid.js for interactive architecture diagrams -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            mermaid.initialize({
+                startOnLoad: true,
+                theme: 'dark',
+                themeVariables: {
+                    darkMode: true,
+                    background: '#161d33',
+                    primaryColor: '#6366f1',
+                    primaryTextColor: '#e8ecf4',
+                    primaryBorderColor: 'rgba(99, 102, 241, 0.4)',
+                    lineColor: '#06b6d4',
+                    secondaryColor: '#1e2745',
+                    tertiaryColor: '#0f1424'
+                }
+            });
+        });
+    </script>
+</head>
+
+<body>
+    <!-- ===== NAVIGATION ===== -->
+    <nav class="navbar scrolled" id="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="nav-logo">
+                <span class="logo-bracket">&lt;</span>AK<span class="logo-bracket">/&gt;</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="../index.html#about" class="nav-link">About</a></li>
+                <li><a href="../index.html#articles" class="nav-link active">Articles & Findings</a></li>
+                <li><a href="../index.html#projects" class="nav-link">Projects</a></li>
+                <li><a href="../index.html#skills" class="nav-link">Skills</a></li>
+                <li><a href="../index.html#contact" class="nav-link">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- ===== ARTICLE HEADER ===== -->
+    <header class="article-header-section">
+        <div class="article-header-container">
+            <a href="../index.html#articles" class="back-to-home">
+                <i class="fa-solid fa-arrow-left"></i> Back to Articles & Findings
+            </a>
+            <div style="margin-bottom: 1rem;">
+                <span class="tag" style="background: rgba(99, 102, 241, 0.15); border-color: rgba(99, 102, 241, 0.4); color: #818cf8; font-weight: 600;">GraphRAG</span>
+                <span class="tag" style="background: rgba(6, 182, 212, 0.15); border-color: rgba(6, 182, 212, 0.4); color: #22d3ee; font-weight: 600;">Search & Retrieval</span>
+                <span class="tag" style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.4); color: #34d399; font-weight: 600;">Knowledge Graphs</span>
+            </div>
+            <h1 class="article-main-title">GraphRAG Indexing for Local Search: Architecture, Mechanics, and Engineering Trade-Offs</h1>
+            <p class="article-lead">
+                Why standard vector RAG breaks down on entity-centric questions, how GraphRAG's multi-layered index bridges LanceDB embeddings, graph topology, and grounded text units, and the practical engineering trade-offs of deploying it in production.
+            </p>
+
+            <div class="article-author-meta">
+                <img src="../data/anshu.jpeg" alt="Anshu Kumar" class="author-avatar">
+                <div class="author-info">
+                    <h4>Anshu Kumar</h4>
+                    <p>Machine Learning Lead · Applied AI & Search</p>
+                </div>
+                <div class="article-details">
+                    <span><i class="fa-regular fa-calendar"></i> October 31, 2026</span>
+                    <span><i class="fa-regular fa-clock"></i> 12 min read</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ===== ARTICLE BODY ===== -->
+    <main class="article-body-container">
+        <article class="article-prose">
+
+            <div class="callout-box">
+                <div class="callout-title">
+                    <i class="fa-solid fa-lightbulb"></i> Executive Summary
+                </div>
+                <div class="callout-content">
+                    <p>
+                        <strong>Local Search</strong> is engineered specifically for entity-centric, relationship-driven, and "needle-in-a-haystack" discovery. While Global Search is built for corpus-wide thematic summaries via Map-Reduce, Local Search navigates fine-grained subgraphs grounded in verbatim source quotes. To make this possible at low runtime latency, the offline indexing pipeline constructs a multi-layered index marrying dense vector search with knowledge graph traversal.
+                    </p>
+                </div>
+            </div>
+
+            <h2><i class="fa-solid fa-triangle-exclamation" style="color: #f59e0b; font-size: 1.3rem;"></i> The Core Problem: Why Traditional RAG Falls Short</h2>
+            <p>
+                In standard semantic search and naive RAG architectures, documents are split into fixed-size chunks and projected into a shared embedding space. When a user asks an entity-centric question:
+            </p>
+            <blockquote style="margin: 1.5rem 0; padding: 1rem 1.5rem; background: rgba(99, 102, 241, 0.05); border-left: 3px solid var(--accent-primary); border-radius: 0 8px 8px 0; font-style: italic; color: #cbd5e1;">
+                "What are customers saying about the iPhone 15 Pro battery life under heavy 5G gaming, and does it overheat while using the fast charger?"
+            </blockquote>
+            <p>
+                Traditional dense vector retrieval encounters three fundamental architectural bottlenecks:
+            </p>
+            <ul>
+                <li><strong>Semantic Dispersion:</strong> The relevant signals are scattered across hundreds of disparate customer reviews, support logs, and technical spec sheets. No single chunk contains the complete picture.</li>
+                <li><strong>Entity Blindness:</strong> Dense vectors frequently conflate closely related products (e.g., standard iPhone 15 vs. iPhone 15 Pro) due to overlapping vocabulary, lacking explicit entity boundaries.</li>
+                <li><strong>Missing Relational Hops:</strong> Vector similarity cannot reliably traverse multi-hop connections, such as linking <code>[iPhone 15 Pro]</code> &rarr; <code>[Titanium Frame]</code> &rarr; <code>[Thermal Dissipation]</code> &rarr; <code>[Fast Charger Compatibility]</code>.</li>
+            </ul>
+
+            <p>
+                GraphRAG resolves this by precomputing a multi-tiered index that maps user queries to canonical entities, traverses explicit relational subgraphs, and hydrates original verbatim quotes for factual grounding.
+            </p>
+
+            <h2><i class="fa-solid fa-sitemap" style="color: #06b6d4; font-size: 1.3rem;"></i> 1. End-to-End Indexing Architecture</h2>
+            <p>
+                The indexing pipeline operates as an offline pipeline that extracts, canonicalizes, and embeds graph elements so query-time search runs with sub-second execution.
+            </p>
+
+            <div class="mermaid-container">
+                <pre class="mermaid">
+flowchart TD
+    subgraph STAGE1["1️⃣ Ingestion & Chunking"]
+        RAW["📦 Raw Catalog & Reviews\n(Specs, feedback, support logs, return notes)"]
+        CHUNKS["✂️ Text Units (1200 tokens, 100 overlap)\nchunk_001: 'iPhone 15 Pro battery drains in 6h...'\nchunk_002: 'MagSafe puck causes iPhone 15 Pro heat...'"]
+        RAW --> CHUNKS
+    end
+
+    subgraph STAGE2["2️⃣ Graph & Claim Extraction (LLM)"]
+        EXTRACT["🔍 Entity & Relationship Extraction\nExtract candidate nodes and relations + gleanings\n• Entities: [iPhone 15 Pro], [Battery Life], [MagSafe Charger]\n• Relationships: (iPhone 15 Pro) ──[HAS_FEATURE]──> (Battery Life)"]
+        
+        COVARIATES["📑 Covariate & Claim Extraction\nExtract verifiable claims, observations, and metrics:\n• Claim: 'Battery drains in 6 hours under 5G'\n• Status: TRUE | Severity: HIGH | Source: chunk_001"]
+
+        CHUNKS --> EXTRACT
+        CHUNKS --> COVARIATES
+    end
+
+    subgraph STAGE3["3️⃣ Entity Consolidation & Graph Structuring"]
+        CONSOLIDATE["🔄 Entity Description Summarization (LLM)\nConsolidate hundreds of fragmented mentions into a\nsingle canonical summary for each entity"]
+        
+        FINALIZE["🕸️ Finalize Knowledge Graph\n• Compute node degrees (centrality)\n• Prune orphaned edges\n• Build adjacency lists for 1–2 hop traversal"]
+
+        EXTRACT --> CONSOLIDATE
+        CONSOLIDATE --> FINALIZE
+    end
+
+    subgraph STAGE4["4️⃣ Vector Embedding & Storage"]
+        EMBED["🧬 Embedding Generation\nGenerate high-dimensional vector embeddings for:\n1. Canonical Entity Descriptions (Primary Search Targets)\n2. Text Units (Raw Evidence Backup)"]
+
+        LANCEDB["⚡ LanceDB Vector Store\nTable: entity_description_embeddings\nEnables fast k-NN lookup of seed entities"]
+
+        PARQUET["💾 Parquet Structured Tables\n• entities.parquet\n• relationships.parquet\n• text_units.parquet\n• covariates.parquet\n• community_reports.parquet"]
+
+        CONSOLIDATE --> EMBED
+        CHUNKS --> EMBED
+        EMBED --> LANCEDB
+        FINALIZE --> PARQUET
+        COVARIATES --> PARQUET
+        CHUNKS --> PARQUET
+    end
+
+    subgraph RUNTIME["🔍 Runtime: How Local Search Uses This Index"]
+        direction TB
+        Q["❓ User Query:\n'What are customers saying about\niPhone 15 Pro battery life?'"]
+        
+        SEED["🎯 Step 1: Seed Entity Matching\nEmbed query → Query LanceDB\nMatches: [iPhone 15 Pro] (0.94), [Battery Life] (0.89)"]
+        
+        TRAVERSE["🌐 Step 2: 1–2 Hop Neighborhood Traversal\nFrom entities.parquet & relationships.parquet:\nPull directly connected entities, accessories & features"]
+        
+        ASSEMBLE["📦 Step 3: Token Budget Assembly\n• 50% Text Units (raw reviews)\n• 25% Graph Relationships & Claims\n• 25% Community Reports (macro context)"]
+        
+        ANS["✅ Grounded Answer with Citations\nSpecific, cited answer referencing reviews & claims"]
+
+        Q --> SEED
+        SEED --> TRAVERSE
+        TRAVERSE --> ASSEMBLE
+        ASSEMBLE --> ANS
+    end
+
+    LANCEDB -.->|"Vector match\nfinds seed entities"| SEED
+    PARQUET -.->|"Supplies graph,\nclaims & raw chunks"| TRAVERSE
+                </pre>
+            </div>
+
+            <h2><i class="fa-solid fa-gears" style="color: #6366f1; font-size: 1.3rem;"></i> 2. Step-by-Step Breakdown of Indexing Stages</h2>
+
+            <div class="stage-card">
+                <div class="stage-card-header">
+                    <span class="stage-card-title"><i class="fa-solid fa-scissors"></i> Stage 1: Document Ingestion and Chunking</span>
+                    <span class="stage-tag">text_units.parquet</span>
+                </div>
+                <p>
+                    Raw unstructured data is divided into overlapping chunks called <code>TextUnits</code>. The standard default uses <strong>1,200 tokens per chunk</strong> with a <strong>100-token sliding window overlap</strong>.
+                </p>
+                <p>
+                    <strong>Why Local Search needs it:</strong> Knowledge graphs are powerful for structural connections, but humans require verifiable source quotations. Every extracted entity and relationship edge preserves source <code>TextUnit</code> IDs so the runtime engine can hydrate verbatim source sentences into the LLM context.
+                </p>
+                <pre><code>TextUnit #TU_8821:
+"Verified Buyer @tech_guru: I've been testing the iPhone 15 Pro for 2 weeks. Under heavy 5G
+streaming and gaming, the battery drains in 5.5 to 6 hours, and the titanium frame gets
+warm around the camera bump. The MagSafe 15W charger helps top it off quickly though."</code></pre>
+            </div>
+
+            <div class="stage-card">
+                <div class="stage-card-header">
+                    <span class="stage-card-title"><i class="fa-solid fa-project-diagram"></i> Stage 2: Dual-Pass Entity & Relationship Extraction</span>
+                    <span class="stage-tag">LLM Extraction + Gleaning</span>
+                </div>
+                <p>
+                    Each text unit is evaluated by an LLM prompt that extracts domain entities (Name, Type, Description) and directed relationships (Source, Target, Description, Weight).
+                </p>
+                <p>
+                    <strong>The Gleaning Round:</strong> Entity extraction from dense documents is notoriously prone to false negatives. GraphRAG introduces a second-pass "gleaning" prompt asking: <em>"Did you miss any entities or relationships in the chunk above?"</em>. This catches long-tail attributes and subtle multi-hop connections.
+                </p>
+                <pre><code>• Entity: iPhone 15 Pro [PRODUCT]
+• Entity: Battery Life [FEATURE]
+• Entity: Titanium Frame [COMPONENT]
+• Entity: MagSafe 15W Charger [ACCESSORY]
+• Relationship: (iPhone 15 Pro) ──[HAS_FEATURE]──> (Battery Life)
+• Relationship: (iPhone 15 Pro) ──[COMPATIBLE_WITH]──> (MagSafe 15W Charger)</code></pre>
+            </div>
+
+            <div class="stage-card">
+                <div class="stage-card-header">
+                    <span class="stage-card-title"><i class="fa-solid fa-compress"></i> Stage 3: Entity Consolidation & Summarization</span>
+                    <span class="stage-tag">entities.parquet</span>
+                </div>
+                <p>
+                    In a corpus with 50,000 reviews, the entity <code>iPhone 15 Pro</code> may appear 3,400 times with noisy, fragmented, or partial descriptions.
+                </p>
+                <p>
+                    GraphRAG groups all extraction instances by canonical name and runs an LLM summarization pass to merge them into a <strong>single authoritative entity profile</strong>.
+                </p>
+                <pre><code>Entity: iPhone 15 Pro
+Type: PRODUCT
+Consolidated Description:
+"Apple flagship smartphone released in late 2023 featuring an A17 Pro chip and titanium 
+design. Customer sentiment is largely positive on camera capabilities, but reports 
+frequently highlight battery life constraints (averaging 5.5–7 hours under heavy 5G load) 
+and localized thermal warm-up around the camera bump during rapid wireless charging."</code></pre>
+            </div>
+
+            <div class="stage-card">
+                <div class="stage-card-header">
+                    <span class="stage-card-title"><i class="fa-solid fa-file-shield"></i> Stage 4: Covariates & Claims Extraction</span>
+                    <span class="stage-tag">covariates.parquet</span>
+                </div>
+                <p>
+                    Beyond nodes and edges, the pipeline extracts verifiable dynamic assertions known as <strong>claims</strong> or <strong>covariates</strong>. Each claim captures status, severity, and exact source attribution.
+                </p>
+                <p>
+                    <strong>Why Local Search needs it:</strong> When an executive or customer asks <em>"Why are users returning the phone?"</em>, claims provide structured quantitative evidence without requiring the LLM to infer consensus from raw prose.
+                </p>
+                <pre><code>{
+  "subject": "iPhone 15 Pro",
+  "object": "Battery Drain Under 5G",
+  "type": "PERFORMANCE_CLAIM",
+  "status": "TRUE",
+  "severity": "MODERATE",
+  "description": "Discharges in 5.5 to 6 hours during continuous 5G streaming.",
+  "source_text_unit": "TU_8821"
+}</code></pre>
+            </div>
+
+            <div class="stage-card">
+                <div class="stage-card-header">
+                    <span class="stage-card-title"><i class="fa-solid fa-network-wired"></i> Stage 5: Finalizing Knowledge Graph Topology</span>
+                    <span class="stage-tag">relationships.parquet</span>
+                </div>
+                <p>
+                    The pipeline computes topological graph metrics, notably <strong>Node Degree Centrality</strong> (number of incident connections). It prunes orphaned or low-confidence edges and serializes indexed adjacency lists into fast columnar Parquet files.
+                </p>
+            </div>
+
+            <div class="stage-card">
+                <div class="stage-card-header">
+                    <span class="stage-card-title"><i class="fa-solid fa-bolt"></i> Stage 6: Vector Embedding of Entity Descriptions</span>
+                    <span class="stage-tag">LanceDB Store</span>
+                </div>
+                <p>
+                    <strong>The fundamental paradigm shift:</strong> Traditional RAG indexes raw text chunks. In GraphRAG Local Search, <strong>the vector index embeds the canonical entity descriptions</strong>.
+                </p>
+                <p>
+                    Stored in <strong>LanceDB</strong> under the <code>entity_description_embeddings</code> table, this enables fast Approximate Nearest Neighbor (ANN) search. When a user query arrives, it matches directly against entity concepts rather than arbitrary paragraph text, instantly uncovering the seed nodes to start traversing the graph.
+                </p>
+            </div>
+
+            <div class="stage-card">
+                <div class="stage-card-header">
+                    <span class="stage-card-title"><i class="fa-solid fa-layer-group"></i> Stage 7: Community Hierarchy & Macro-Context</span>
+                    <span class="stage-tag">community_reports.parquet</span>
+                </div>
+                <p>
+                    Using the Leiden hierarchical clustering algorithm, the graph is organized into multi-level topical communities. While Community Reports power Global Search Map-Reduce, Local Search allocates <strong>25% of its prompt token budget</strong> to the community reports surrounding the seed entities, preventing hyper-local tunnel vision.
+                </p>
+            </div>
+
+            <h2><i class="fa-solid fa-table-list" style="color: #10b981; font-size: 1.3rem;"></i> 3. Comparison: Index Artifacts Used by Search Mode</h2>
+            <p>
+                Each artifact generated during indexing serves a distinct function between Local and Global search modes:
+            </p>
+
+            <div class="table-wrapper">
+                <table class="article-table">
+                    <thead>
+                        <tr>
+                            <th>Index Artifact</th>
+                            <th>Storage Format</th>
+                            <th>Used by Local Search?</th>
+                            <th>Used by Global Search?</th>
+                            <th>Purpose in Local Search</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong><code>text_units.parquet</code></strong></td>
+                            <td>Columnar Parquet</td>
+                            <td><span class="stage-tag" style="background: rgba(16, 185, 129, 0.15); color: #34d399;">Yes (50% Budget)</span></td>
+                            <td>❌ No</td>
+                            <td>Supplies grounded customer quotes and review citations</td>
+                        </tr>
+                        <tr>
+                            <td><strong><code>entities.parquet</code></strong></td>
+                            <td>Columnar Parquet</td>
+                            <td><span class="stage-tag">Yes (Focal Points)</span></td>
+                            <td>❌ No</td>
+                            <td>Canonical entity definitions, categories, and descriptions</td>
+                        </tr>
+                        <tr>
+                            <td><strong><code>entity_description_embeddings</code></strong></td>
+                            <td>LanceDB Table</td>
+                            <td><span class="stage-tag" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24;">Yes (Seed Discovery)</span></td>
+                            <td>❌ No</td>
+                            <td>Semantic query &rarr; entity entry point mapping</td>
+                        </tr>
+                        <tr>
+                            <td><strong><code>relationships.parquet</code></strong></td>
+                            <td>Columnar Parquet</td>
+                            <td><span class="stage-tag">Yes (1–2 Hops)</span></td>
+                            <td>❌ No</td>
+                            <td>Connects products to accessories, components, and symptoms</td>
+                        </tr>
+                        <tr>
+                            <td><strong><code>covariates.parquet</code></strong></td>
+                            <td>Columnar Parquet</td>
+                            <td><span class="stage-tag">Yes (Evidence)</span></td>
+                            <td>❌ No</td>
+                            <td>Structured claims (defect rates, benchmark findings, complaints)</td>
+                        </tr>
+                        <tr>
+                            <td><strong><code>community_reports.parquet</code></strong></td>
+                            <td>Columnar Parquet</td>
+                            <td><span class="stage-tag" style="background: rgba(6, 182, 212, 0.15); color: #22d3ee;">Yes (25% Budget)</span></td>
+                            <td>✅ Yes (100% Budget)</td>
+                            <td>Injects high-level category trends and macro context</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h2><i class="fa-solid fa-play" style="color: #8b5cf6; font-size: 1.3rem;"></i> 4. Query-Time Execution: How the Local Index is Consumed</h2>
+            <p>
+                When a query arrives in production, the engine traverses the index through an orchestrated 4-step pipeline:
+            </p>
+
+            <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--border-radius); padding: 1.5rem; margin: 1.5rem 0;">
+                <p style="font-weight: 600; color: var(--accent-tertiary); margin-bottom: 0.5rem;">
+                    <i class="fa-solid fa-terminal"></i> Query Example:
+                </p>
+                <p style="font-style: italic; color: var(--text-bright); margin-bottom: 1rem;">
+                    "How does the iPhone 15 Pro battery handle fast charging, and does it overheat?"
+                </p>
+                <ol style="margin-bottom: 0; padding-left: 1.25rem;">
+                    <li><strong>Vector Seed Discovery (LanceDB):</strong> Embeds query &rarr; finds <code>iPhone 15 Pro (0.94)</code>, <code>Fast Charging (0.91)</code>, and <code>Battery Life (0.88)</code>.</li>
+                    <li><strong>1–2 Hop Graph Traversal:</strong> Traverses adjacency lists to discover connected accessories (<code>MagSafe 15W</code>) and hardware components (<code>Titanium Frame</code>), pulling defect claims showing frame temperatures hitting 41°C.</li>
+                    <li><strong>Text Unit Hydration:</strong> Pulls source chunks (<code>TU_8821</code>, <code>TU_9043</code>) referenced by the matched graph edges.</li>
+                    <li><strong>Context Assembly & Generation:</strong> Assembles a balanced prompt budget: <strong>50% verbatim chunks</strong>, <strong>25% graph triples & claims</strong>, and <strong>25% community overview</strong>. Generates an answer with inline source citations.</li>
+                </ol>
+            </div>
+
+            <h2><i class="fa-solid fa-scale-balanced" style="color: #ef4444; font-size: 1.3rem;"></i> 5. Architectural & Engineering Trade-Offs</h2>
+            <p>
+                Deploying GraphRAG Local Search in enterprise production introduces crucial engineering trade-offs that teams must weigh:
+            </p>
+
+            <div class="tradeoffs-grid">
+                <div class="tradeoff-card">
+                    <div class="tradeoff-header">
+                        <i class="fa-solid fa-coins" style="color: #f59e0b; font-size: 1.2rem;"></i>
+                        <h3 class="tradeoff-title">1. Heavy Offline Precomputation vs. Fast Query Execution</h3>
+                    </div>
+                    <p style="color: var(--text-secondary); margin-bottom: 0;">
+                        <strong>Trade-off:</strong> Building the index requires massive offline LLM token expenditure (chunk extraction, gleanings, entity summarization, and community reports). However, this pays off at query time: runtime latency is orders of magnitude lower than iterative LLM routing or runtime Map-Reduce, requiring only a fast LanceDB lookup and local graph traversal.
+                    </p>
+                </div>
+
+                <div class="tradeoff-card">
+                    <div class="tradeoff-header">
+                        <i class="fa-solid fa-rotate" style="color: #06b6d4; font-size: 1.2rem;"></i>
+                        <h3 class="tradeoff-title">2. Index Freshness vs. Graph Recomputation Overhead</h3>
+                    </div>
+                    <p style="color: var(--text-secondary); margin-bottom: 0;">
+                        <strong>Trade-off:</strong> Vector databases excel at append-only streaming updates. Knowledge graphs, by contrast, require updating centrality scores, re-summarizing entity descriptions, and recalculating community partitions when new documents arrive. <em>Mitigation:</em> Use micro-batch delta indexing for new chunks, scheduling full graph reconciliation periodically.
+                    </p>
+                </div>
+
+                <div class="tradeoff-card">
+                    <div class="tradeoff-header">
+                        <i class="fa-solid fa-filter" style="color: #ec4899; font-size: 1.2rem;"></i>
+                        <h3 class="tradeoff-title">3. Extraction Recall vs. Graph Noise</h3>
+                    </div>
+                    <p style="color: var(--text-secondary); margin-bottom: 0;">
+                        <strong>Trade-off:</strong> Aggressive LLM extraction with multiple gleaning passes captures rare, long-tail relationships but risks hallucinating spurious entities or trivial edges. Conservative extraction keeps the graph clean but leaves critical connectivity gaps. <em>Mitigation:</em> Enforce strict degree pruning and domain entity type whitelists.
+                    </p>
+                </div>
+
+                <div class="tradeoff-card">
+                    <div class="tradeoff-header">
+                        <i class="fa-solid fa-sliders" style="color: #10b981; font-size: 1.2rem;"></i>
+                        <h3 class="tradeoff-title">4. Context Budget Tension: Chunks vs. Graph Structure</h3>
+                    </div>
+                    <p style="color: var(--text-secondary); margin-bottom: 0;">
+                        <strong>Trade-off:</strong> The LLM's context window is finite. Over-indexing on raw text chunks turns GraphRAG into standard RAG, while over-indexing on graph triples yields dry, robotic answers lacking customer voice and nuance. The <strong>50% chunks / 25% triples & claims / 25% community reports</strong> distribution provides the sweet spot.
+                    </p>
+                </div>
+            </div>
+
+            <!-- ===== TAKEAWAYS SECTION ===== -->
+            <div class="takeaways-container">
+                <div class="takeaway-header">
+                    <i class="fa-solid fa-circle-check" style="color: #10b981; font-size: 1.6rem;"></i>
+                    <h3>Key Engineering Takeaways</h3>
+                </div>
+                <ul class="takeaway-list">
+                    <li class="takeaway-item">
+                        <i class="fa-solid fa-check takeaway-icon"></i>
+                        <span><strong>Entity Descriptions Are the True Vector Target:</strong> In Local Search, embedding raw text chunks is secondary. The primary vector search target is the consolidated entity description in LanceDB, serving as the semantic entrance gate into the graph.</span>
+                    </li>
+                    <li class="takeaway-item">
+                        <i class="fa-solid fa-check takeaway-icon"></i>
+                        <span><strong>Graph Structure Guides, Raw Chunks Ground:</strong> The knowledge graph determines <em>what</em> connected evidence is relevant; the raw <code>TextUnits</code> supply the <em>verbatim proof</em> required for hallucination-free, cited generation.</span>
+                    </li>
+                    <li class="takeaway-item">
+                        <i class="fa-solid fa-check takeaway-icon"></i>
+                        <span><strong>Covariates and Claims Bridge Qualitative and Quantitative Data:</strong> Structured claims transform subjective customer prose into quantifiable assertions with explicit status, severity, and provenance.</span>
+                    </li>
+                    <li class="takeaway-item">
+                        <i class="fa-solid fa-check takeaway-icon"></i>
+                        <span><strong>Local Search Complements, Rather Than Replaces, Global Search:</strong> Use Global Search for high-level thematic queries (<em>"What are the top complaint themes across all products?"</em>) and Local Search for precision entity inquiries (<em>"Does Charger A work with Dock B?"</em>).</span>
+                    </li>
+                    <li class="takeaway-item">
+                        <i class="fa-solid fa-check takeaway-icon"></i>
+                        <span><strong>Decoupled Columnar + Vector Storage:</strong> Persisting vector indexes in LanceDB and relational graph tables in columnar Parquet guarantees low storage footprint, lightning-fast queries, and clean analytical extensibility.</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Author Card -->
+            <div class="article-author-card">
+                <img src="../data/anshu.jpeg" alt="Anshu Kumar" class="author-large-avatar">
+                <div class="author-bio-content">
+                    <h3>Anshu Kumar</h3>
+                    <p class="author-role-tag">Machine Learning Lead · Applied AI & Search</p>
+                    <p class="author-bio-text">
+                        12+ years building production ML systems, Agentic AI, Search & Retrieval, and LLM-powered applications. Passionate about bridging theoretical AI research with high-performance enterprise execution.
+                    </p>
+                    <div class="author-social-links">
+                        <a href="https://github.com/akgeni" target="_blank" rel="noopener" class="author-social-btn">
+                            <i class="fa-brands fa-github"></i> GitHub
+                        </a>
+                        <a href="https://in.linkedin.com/in/anshu19" target="_blank" rel="noopener" class="author-social-btn">
+                            <i class="fa-brands fa-linkedin-in"></i> LinkedIn
+                        </a>
+                        <a href="https://www.kaggle.com/akgeni" target="_blank" rel="noopener" class="author-social-btn">
+                            <i class="fa-brands fa-kaggle"></i> Kaggle
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </article>
+    </main>
+
+    <!-- ===== FOOTER ===== -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom" style="text-align: center; border-top: 1px solid var(--border-subtle); padding: 2rem 0; color: var(--text-muted); font-size: 0.9rem;">
+                <p>&copy; 2026 Anshu Kumar. Built with precision and curiosity.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+
+</html>

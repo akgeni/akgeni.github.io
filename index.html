@@ -197,30 +197,45 @@
                     from the field.</p>
             </div>
 
-            <!-- Filter Tabs (hidden while articles are coming soon) -->
-            <!--
+            <!-- Filter Tabs -->
             <div class="filter-tabs" id="filterTabs">
                 <button class="filter-tab active" data-filter="all">All</button>
-                <button class="filter-tab" data-filter="nlp">NLP</button>
-                <button class="filter-tab" data-filter="deep-learning">Deep Learning</button>
-                <button class="filter-tab" data-filter="applied-ml">Applied ML</button>
-                <button class="filter-tab" data-filter="findings">Key Findings</button>
+                <button class="filter-tab" data-filter="graphrag">GraphRAG</button>
+                <button class="filter-tab" data-filter="search">Search & Retrieval</button>
             </div>
-            -->
 
-            <div class="articles-placeholder">
-                <div class="placeholder-icon">
-                    <i class="fa-solid fa-feather-pointed"></i>
-                </div>
-                <h3 class="placeholder-title">Articles & Findings Coming Soon</h3>
-                <p class="placeholder-desc">
-                    I'm currently documenting research insights, architecture deep dives, and practical lessons from building production ML systems. Stay tuned for upcoming publications!
-                </p>
-                <div class="placeholder-actions">
-                    <a href="https://in.linkedin.com/in/anshu19" target="_blank" rel="noopener" class="btn btn-outline">
-                        <i class="fa-brands fa-linkedin-in"></i> Follow on LinkedIn
-                    </a>
-                </div>
+            <div class="articles-grid" id="articlesGrid">
+                <!-- Article 1: GraphRAG Indexing for Local Search -->
+                <article class="article-card" data-category="graphrag search" id="article-graphrag">
+                    <div class="article-image">
+                        <div class="article-gradient-bg gradient-3"></div>
+                        <div class="article-badge">GraphRAG</div>
+                        <div class="article-read-time">
+                            <i class="fa-regular fa-clock"></i> 12 min read
+                        </div>
+                    </div>
+                    <div class="article-body">
+                        <div class="article-meta">
+                            <time datetime="2026-10-31">Oct 31, 2026</time>
+                            <span class="article-dot">·</span>
+                            <span>Architecture & Deep Dive</span>
+                        </div>
+                        <h3 class="article-title">GraphRAG Indexing for Local Search: Architecture, Mechanics, and Engineering Trade-Offs</h3>
+                        <p class="article-excerpt">
+                            Why standard vector RAG breaks down on entity-centric queries, how GraphRAG's multi-layered index unites LanceDB vector embeddings, graph topology, and verbatim text units, and practical engineering trade-offs in enterprise production.
+                        </p>
+                        <div class="article-tags">
+                            <span class="tag">GraphRAG</span>
+                            <span class="tag">Local Search</span>
+                            <span class="tag">LanceDB</span>
+                            <span class="tag">Knowledge Graph</span>
+                            <span class="tag">Vector Search</span>
+                        </div>
+                        <a href="articles/graphrag-local-search-indexing.html" class="article-link">
+                            Read Full Article <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </article>
             </div>
         </div>
     </section>

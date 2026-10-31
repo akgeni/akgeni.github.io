@@ -164,7 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Filter articles
             articleCards.forEach(card => {
                 const category = card.dataset.category;
-                if (filter === 'all' || category === filter) {
+                if (filter === 'all' || category === filter || (category && category.split(' ').includes(filter))) {
                     card.classList.remove('hidden');
                     card.style.animation = 'fadeInUp 0.4s ease forwards';
                 } else {
