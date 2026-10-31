@@ -648,16 +648,27 @@ img {
     transform: translateY(-4px);
 }
 
-/* ---------- ABOUT EXTENSIONS ---------- */
-.about-block {
+/* ---------- ABOUT & SKILLS EXTENSIONS ---------- */
+.about-block,
+.skills-block {
     margin-top: 3.5rem;
 }
 
-.about-block-header {
+.skills-block:first-of-type {
+    margin-top: 0;
+}
+
+.skills-block:last-child {
+    margin-bottom: 0;
+}
+
+.about-block-header,
+.skills-block-header {
     margin-bottom: 1.5rem;
 }
 
-.about-block-title {
+.about-block-title,
+.skills-block-title {
     font-size: 1.4rem;
     font-weight: 700;
     color: var(--text-bright);
@@ -667,18 +678,21 @@ img {
     margin-bottom: 0.4rem;
 }
 
-.about-block-title i {
+.about-block-title i,
+.skills-block-title i {
     color: var(--accent-primary);
     font-size: 1.2rem;
 }
 
-.about-block-desc {
+.about-block-desc,
+.skills-block-desc {
     color: var(--text-secondary);
     font-size: 0.95rem;
     margin: 0;
 }
 
-.about-cards-grid {
+.about-cards-grid,
+.skills-cards-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 1.5rem;
@@ -1477,7 +1491,8 @@ img {
         grid-template-columns: 1fr;
     }
 
-    .about-cards-grid {
+    .about-cards-grid,
+    .skills-cards-grid {
         grid-template-columns: 1fr;
     }
 
